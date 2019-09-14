@@ -9,7 +9,7 @@ import { keccak, keccak256, rlphash } from './hash'
  * Returns a zero address.
  */
 export const zeroAddress = function(): string {
-  const addressLength = 20
+  const addressLength = 64
   const addr = zeros(addressLength)
   return bufferToHex(addr)
 }
@@ -18,7 +18,7 @@ export const zeroAddress = function(): string {
  * Checks if the address is a valid. Accepts checksummed addresses too.
  */
 export const isValidAddress = function(address: string): boolean {
-  return /^0x[0-9a-fA-F]{40}$/.test(address)
+  return /^0x[0-9a-fA-F]{128}$/.test(address)
 }
 
 /**
@@ -79,11 +79,11 @@ export const generateAddress = function(from: Buffer, nonce: Buffer): Buffer {
   if (nonceBN.isZero()) {
     // in RLP we want to encode null in the case of zero nonce
     // read the RLP documentation for an answer if you dare
-    return rlphash([from, null]).slice(-20)
+    return rlphash([from, null])
   }
 
   // Only take the lower 160bits of the hash
-  return rlphash([from, Buffer.from(nonceBN.toArray())]).slice(-20)
+  return rlphash([from, Buffer.from(nonceBN.toArray())])
 }
 
 /**
@@ -108,7 +108,7 @@ export const generateAddress2 = function(
     Buffer.concat([Buffer.from('ff', 'hex'), fromBuf, saltBuf, keccak256(initCodeBuf)]),
   )
 
-  return address.slice(-20)
+  return address
 }
 
 /**
@@ -158,7 +158,7 @@ export const pubToAddress = function(pubKey: Buffer, sanitize: boolean = false):
   }
   assert(pubKey.length === 64)
   // Only take the lower 160bits of the hash
-  return keccak(pubKey).slice(-20)
+  return keccak(pubKey)
 }
 export const publicToAddress = pubToAddress
 
