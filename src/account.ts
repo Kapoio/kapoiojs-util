@@ -1,6 +1,7 @@
 const assert = require('assert')
 const ethjsUtil = require('ethjs-util')
 const secp256k1 = require('secp256k1')
+const EdDSA = require('elliptic').eddsa;
 import BN = require('bn.js')
 import { toBuffer, addHexPrefix, zeros, bufferToHex, unpad } from './bytes'
 import { keccak, keccak256, rlphash } from './hash'
@@ -9,7 +10,7 @@ import { keccak, keccak256, rlphash } from './hash'
  * Returns a zero address.
  */
 export const zeroAddress = function(): string {
-  const addressLength = 20
+  const addressLength = 64
   const addr = zeros(addressLength)
   return bufferToHex(addr)
 }
@@ -18,7 +19,7 @@ export const zeroAddress = function(): string {
  * Checks if the address is a valid. Accepts checksummed addresses too.
  */
 export const isValidAddress = function(address: string): boolean {
-  return /^0x[0-9a-fA-F]{40}$/.test(address)
+  return /^0x[0-9a-fA-F]{128}$/.test(address)
 }
 
 /**
@@ -79,11 +80,11 @@ export const generateAddress = function(from: Buffer, nonce: Buffer): Buffer {
   if (nonceBN.isZero()) {
     // in RLP we want to encode null in the case of zero nonce
     // read the RLP documentation for an answer if you dare
-    return rlphash([from, null]).slice(-20)
+    return rlphash([from, null])
   }
 
   // Only take the lower 160bits of the hash
-  return rlphash([from, Buffer.from(nonceBN.toArray())]).slice(-20)
+  return rlphash([from, Buffer.from(nonceBN.toArray())])
 }
 
 /**
@@ -108,7 +109,7 @@ export const generateAddress2 = function(
     Buffer.concat([Buffer.from('ff', 'hex'), fromBuf, saltBuf, keccak256(initCodeBuf)]),
   )
 
-  return address.slice(-20)
+  return address
 }
 
 /**
@@ -122,8 +123,16 @@ export const isPrecompiled = function(address: Buffer | string): boolean {
 /**
  * Checks if the private key satisfies the rules of the curve secp256k1.
  */
-export const isValidPrivate = function(privateKey: Buffer): boolean {
-  return secp256k1.privateKeyVerify(privateKey)
+export const isValidPrivate = function(privateKey: Buffer, isStealthAddress: boolean = true): boolean {
+  if(!isStealthAddress) {
+    return secp256k1.privateKeyVerify(privateKey)
+  }
+  else {
+    var ed = new EdDSA('ed25519')
+
+    var key = ed.keyFromSecret(privateKey)
+    return ed.isPoint(key.pub())
+  }
 }
 
 /**
@@ -131,18 +140,28 @@ export const isValidPrivate = function(privateKey: Buffer): boolean {
  * and the requirements of Ethereum.
  * @param publicKey The two points of an uncompressed key, unless sanitize is enabled
  * @param sanitize Accept public keys in other formats
+ * @param isStealthAddress checks if its a contract identity address
  */
-export const isValidPublic = function(publicKey: Buffer, sanitize: boolean = false): boolean {
+export const isValidPublic = function(publicKey: Buffer, sanitize: boolean = false, isStealthAddress: boolean = true): boolean {
   if (publicKey.length === 64) {
     // Convert to SEC1 for secp256k1
-    return secp256k1.publicKeyVerify(Buffer.concat([Buffer.from([4]), publicKey]))
+    if(!isStealthAddress) {
+      return secp256k1.publicKeyVerify(Buffer.concat([Buffer.from([4]), publicKey]))
+    }
+
   }
 
   if (!sanitize) {
     return false
   }
 
-  return secp256k1.publicKeyVerify(publicKey)
+  if(isStealthAddress) {
+    var ed = new EdDSA('ed25519')
+    return ed.isPoint(publicKey)
+  }
+  else {
+    return secp256k1.publicKeyVerify(publicKey)
+  }
 }
 
 /**
@@ -158,26 +177,37 @@ export const pubToAddress = function(pubKey: Buffer, sanitize: boolean = false):
   }
   assert(pubKey.length === 64)
   // Only take the lower 160bits of the hash
-  return keccak(pubKey).slice(-20)
+  return keccak(pubKey)
 }
 export const publicToAddress = pubToAddress
 
 /**
  * Returns the ethereum address of a given private key.
+ *
  * @param privateKey A private key must be 256 bits wide
+ * @param isStealthAddress checks if its a contract identity address
  */
-export const privateToAddress = function(privateKey: Buffer): Buffer {
-  return publicToAddress(privateToPublic(privateKey))
+export const privateToAddress = function(privateKey: Buffer, isStealthAddress: boolean): Buffer {
+  return publicToAddress(privateToPublic(privateKey, isStealthAddress))
 }
 
 /**
  * Returns the ethereum public key of a given private key.
  * @param privateKey A private key must be 256 bits wide
+ * @param isStealthAddress checks if its a contract identity address
  */
-export const privateToPublic = function(privateKey: Buffer): Buffer {
+export const privateToPublic = function(privateKey: Buffer, isStealthAddress: boolean): Buffer {
   privateKey = toBuffer(privateKey)
   // skip the type flag and use the X, Y points
-  return secp256k1.publicKeyCreate(privateKey, false).slice(1)
+  if(!isStealthAddress) {
+    return secp256k1.publicKeyCreate(privateKey, false).slice(1)
+  }
+  else {
+    var ed = new EdDSA('ed25519')
+
+    var key = ed.keyFromSecret(privateKey)
+    return key.pub()
+  }
 }
 
 /**
