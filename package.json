@@ -1,7 +1,7 @@
 {
-  "name": "ethereumjs-util",
+  "name": "kapoiojs-util",
   "version": "6.1.0",
-  "description": "a collection of utility functions for Ethereum",
+  "description": "a collection of utility functions for Kapoio",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -31,10 +31,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ethereumjs/ethereumjs-util.git"
+    "url": "https://github.com/ivanshukhov/kapoiojs-util.git"
   },
   "keywords": [
-    "ethereum",
+    "kapoio",
     "utilties"
   ],
   "author": "mjbecze <mjbecze@gmail.com>",
@@ -84,9 +84,9 @@
   ],
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/ethereumjs/ethereumjs-util/issues"
+    "url": "https://github.com/ivanshukhov/kapoiojs-util/issues"
   },
-  "homepage": "https://github.com/ethereumjs/ethereumjs-util",
+  "homepage": "https://github.com/ivanshukhov/kapoiojs-util",
   "dependencies": {
     "@types/bn.js": "^4.11.3",
     "bn.js": "^4.11.0",
