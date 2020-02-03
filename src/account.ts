@@ -120,15 +120,26 @@ export const generateAddress2 = function(from: Buffer, salt: Buffer, initCode: B
  * Checks if the private key satisfies the rules of the curve secp256k1.
  */
 export const isValidPrivate = function(privateKey: Buffer, isStealthAddress: boolean = true): boolean {
-  if(!isStealthAddress) {
-    return secp256k1.privateKeyVerify(privateKey)
-  }
-  else {
-    var ed = new EdDSA('ed25519')
+  let valid
+  try {
+    if(!isStealthAddress) {
+      valid = secp256k1.privateKeyVerify(privateKey)
+    }
+    else {
+      var ed = new EdDSA('ed25519')
 
-    var key = ed.keyFromSecret(privateKey)
-    return ed.isPoint(key.pub())
+      var key = ed.keyFromSecret(privateKey)
+      valid = ed.isPoint(key.pub())
+    }
+  } catch (e) {
+    if (e.message === 'Expected private key to be an Uint8Array with length 32') {
+      valid = false
+    } else {
+      throw e
+    }
   }
+
+  return valid
 }
 
 /**
