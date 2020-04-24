@@ -117,14 +117,6 @@ export const generateAddress2 = function(from: Buffer, salt: Buffer, initCode: B
 }
 
 /**
- * Returns true if the supplied address belongs to a precompiled account (Byzantium).
- */
-export const isPrecompiled = function(address: Buffer | string): boolean {
-  const a = unpad(address)
-  return a.length === 1 && a[0] >= 1 && a[0] <= 8
-}
-
-/**
  * Checks if the private key satisfies the rules of the curve secp256k1.
  */
 export const isValidPrivate = function(privateKey: Buffer, isStealthAddress: boolean = true): boolean {
