@@ -3,8 +3,9 @@ import * as assert from 'assert'
 import * as secp256k1 from 'secp256k1'
 const EdDSA = require('elliptic').eddsa;
 import * as BN from 'bn.js'
-import { toBuffer, addHexPrefix, zeros, bufferToHex, unpad } from './bytes'
+import { toBuffer, zeros, bufferToHex, unpad } from './bytes'
 import { keccak, keccak256, rlphash } from './hash'
+import { assertIsHexString } from './helpers'
 
 /**
  * Returns a zero address.
@@ -18,16 +19,18 @@ export const zeroAddress = function(): string {
 /**
  * Checks if the address is a valid. Accepts checksummed addresses too.
  */
-export const isValidAddress = function(address: string): boolean {
-  return /^0x[0-9a-fA-F]{128}$/.test(address)
+export const isValidAddress = function(hexAddress: string): boolean {
+  assertIsHexString(hexAddress)
+  return /^0x[0-9a-fA-F]{128}$/.test(hexAddress)
 }
 
 /**
  * Checks if a given address is a zero address.
  */
-export const isZeroAddress = function(address: string): boolean {
+export const isZeroAddress = function(hexAddress: string): boolean {
+  assertIsHexString(hexAddress)
   const zeroAddr = zeroAddress()
-  return zeroAddr === addHexPrefix(address)
+  return zeroAddr === hexAddress
 }
 
 /**
@@ -40,8 +43,9 @@ export const isZeroAddress = function(address: string): boolean {
  * WARNING: Checksums with and without the chainId will differ. As of 2019-06-26, the most commonly
  * used variation in Ethereum was without the chainId. This may change in the future.
  */
-export const toChecksumAddress = function(address: string, eip1191ChainId?: number): string {
-  address = ethjsUtil.stripHexPrefix(address).toLowerCase()
+export const toChecksumAddress = function(hexAddress: string, eip1191ChainId?: number): string {
+  assertIsHexString(hexAddress)
+  const address = ethjsUtil.stripHexPrefix(hexAddress).toLowerCase()
 
   const prefix = eip1191ChainId !== undefined ? eip1191ChainId.toString() + '0x' : ''
 
@@ -64,8 +68,11 @@ export const toChecksumAddress = function(address: string, eip1191ChainId?: numb
  *
  * See toChecksumAddress' documentation for details about the eip1191ChainId parameter.
  */
-export const isValidChecksumAddress = function(address: string, eip1191ChainId?: number): boolean {
-  return isValidAddress(address) && toChecksumAddress(address, eip1191ChainId) === address
+export const isValidChecksumAddress = function(
+  hexAddress: string,
+  eip1191ChainId?: number,
+): boolean {
+  return isValidAddress(hexAddress) && toChecksumAddress(hexAddress, eip1191ChainId) === hexAddress
 }
 
 /**
