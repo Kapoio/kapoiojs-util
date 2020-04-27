@@ -3,7 +3,7 @@ import * as assert from 'assert'
 import * as secp256k1 from 'secp256k1'
 const EdDSA = require('elliptic').eddsa;
 import * as BN from 'bn.js'
-import { zeros, bufferToHex, unpad } from './bytes'
+import { zeros, bufferToHex } from './bytes'
 import { keccak, keccak256, rlphash } from './hash'
 import { assertIsHexString, assertIsBuffer } from './helpers'
 
@@ -150,6 +150,7 @@ export const isValidPrivate = function(privateKey: Buffer, isStealthAddress: boo
  * @param isStealthAddress checks if its a contract identity address
  */
 export const isValidPublic = function(publicKey: Buffer, sanitize: boolean = false, isStealthAddress: boolean = true): boolean {
+  assertIsBuffer(publicKey)
   if (publicKey.length === 64) {
     // Convert to SEC1 for secp256k1
     if(!isStealthAddress) {
