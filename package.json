@@ -90,7 +90,7 @@
   "homepage": "https://github.com/ivanshukhov/kapoiojs-util",
   "dependencies": {
     "@types/bn.js": "^4.11.3",
-    "bn.js": "^4.11.8",
+    "bn.js": "^5.1.2",
     "create-hash": "^1.1.2",
     "elliptic": "^6.5.1",
     "ethjs-util": "0.1.6",
