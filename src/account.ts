@@ -3,7 +3,7 @@ import * as assert from 'assert'
 import * as secp256k1 from 'secp256k1'
 const EdDSA = require('elliptic').eddsa;
 import * as BN from 'bn.js'
-import { zeros, bufferToHex } from './bytes'
+import { zeros, bufferToHex, toBuffer } from './bytes'
 import { keccak, keccak256, keccakFromString, rlphash } from './hash'
 import { assertIsHexString, assertIsBuffer } from './helpers'
 
@@ -181,7 +181,7 @@ export const isValidPublic = function(publicKey: Buffer, sanitize: boolean = fal
 export const pubToAddress = function(pubKey: Buffer, sanitize: boolean = false): Buffer {
   assertIsBuffer(pubKey)
   if (sanitize && pubKey.length !== 64) {
-    pubKey = secp256k1.publicKeyConvert(pubKey, false).slice(1)
+    pubKey = toBuffer(secp256k1.publicKeyConvert(pubKey, false).slice(1))
   }
   assert(pubKey.length === 64)
   // Only take the lower 160bits of the hash
@@ -195,7 +195,7 @@ export const publicToAddress = pubToAddress
  * @param privateKey A private key must be 256 bits wide
  * @param isStealthAddress checks if its a contract identity address
  */
-export const privateToAddress = function(privateKey: Buffer, isStealthAddress: boolean): Buffer {
+export const privateToAddress = function(privateKey: Buffer, isStealthAddress: boolean = false): Buffer {
   return publicToAddress(privateToPublic(privateKey, isStealthAddress))
 }
 
@@ -204,11 +204,11 @@ export const privateToAddress = function(privateKey: Buffer, isStealthAddress: b
  * @param privateKey A private key must be 256 bits wide
  * @param isStealthAddress checks if its a contract identity address
  */
-export const privateToPublic = function(privateKey: Buffer, isStealthAddress: boolean): Buffer {
+export const privateToPublic = function(privateKey: Buffer, isStealthAddress: boolean = false): Buffer {
   assertIsBuffer(privateKey)
   // skip the type flag and use the X, Y points
   if(!isStealthAddress) {
-    return secp256k1.publicKeyCreate(privateKey, false).slice(1)
+    return toBuffer(secp256k1.publicKeyCreate(privateKey, false).slice(1))
   }
   else {
     var ed = new EdDSA('ed25519')
@@ -224,7 +224,7 @@ export const privateToPublic = function(privateKey: Buffer, isStealthAddress: bo
 export const importPublic = function(publicKey: Buffer): Buffer {
   assertIsBuffer(publicKey)
   if (publicKey.length !== 64) {
-    publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1)
+    publicKey = toBuffer(secp256k1.publicKeyConvert(publicKey, false).slice(1))
   }
   return publicKey
 }
